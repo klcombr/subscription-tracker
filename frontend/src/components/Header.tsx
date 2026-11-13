@@ -8,7 +8,7 @@ export default function Header() {
         SubTrack
       </Link>
       <nav className={styles.nav}>
-        <a href="/#dashboard">Dashboard</a>
+        <Link href="/">Dashboard</Link>
         <a href="https://app.swaggerhub.com" target="_blank" rel="noopener noreferrer">API Docs</a>
       </nav>
     </header>
