@@ -274,17 +274,17 @@ async def get_dashboard_stats() -> dict:
     yearly_total = (stats_row[1] or 0) + (monthly * 12)
 
     # Próximos vencimentos (próximos 30 dias)
-    thirty_days_later = (today.replace(today.year + (1 if today.month == 12 else 0),
-                                       1 if today.month == 12 else today.month + 1,
-                                       today.day)).isoformat() if today.month == 12 \
-        else today.replace(today.year, today.month + 1, today.day).isoformat()
-    
+    from datetime import timedelta as _td
+    thirty_days_later = (today + _td(days=30)).isoformat()
+
     async with conn.execute("""
-        SELECT id, name, price, frequency, next_due_date, category_name, category_color,
-               CAST(julianday(next_due_date) - julianday(?) AS INTEGER) as days_until
-        FROM subscriptions
-        WHERE is_active = TRUE AND next_due_date BETWEEN ? AND ?
-        ORDER BY next_due_date ASC
+        SELECT s.id, s.name, s.price, s.frequency, s.next_due_date,
+               c.name as category_name, c.color as category_color,
+               CAST(julianday(s.next_due_date) - julianday(?) AS INTEGER) as days_until
+        FROM subscriptions s
+        LEFT JOIN categories c ON s.category_id = c.id
+        WHERE s.is_active = TRUE AND s.next_due_date BETWEEN ? AND ?
+        ORDER BY s.next_due_date ASC
         LIMIT 10
     """, (today.isoformat(), today.isoformat(), thirty_days_later)) as cursor:
         upcoming_rows = await cursor.fetchall()
